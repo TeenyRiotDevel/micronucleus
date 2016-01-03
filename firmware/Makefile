@@ -26,8 +26,15 @@ PROGRAMMER ?= -c USBasp
 # PROGRAMMER contains AVRDUDE options to address your programmer
 
 # Tools:
-AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE) 
-CC = avr-gcc
+ARDUINOAPPDIR = /Applications/Development/Arduino.app
+AVRDIR		= $(ARDUINOAPPDIR)/Contents/Java/hardware/tools/avr
+AVRBIN		= $(AVRDIR)/bin
+
+AVRDUDE = $(AVRBIN)/avrdude $(PROGRAMMER) -p $(DEVICE) -C $(AVRDIR)/etc/avrdude.conf
+CC = $(AVRBIN)/avr-gcc
+AVROBJCOPY= $(AVRBIN)/avr-objcopy
+AVROBJDUMP= $(AVRBIN)/avr-objdump
+AVRSIZE= $(AVRBIN)/avr-size
 
 # Options:
 CFLAGS += -I. -g2 -Os # -Wall
@@ -80,19 +87,19 @@ main.bin:	$(OBJECTS)
 main.hex:	main.bin
 	@echo Building Micronucleus configuration: $(CONFIG)
 	@rm -f main.hex main.eep.hex
-	@avr-objcopy -j .text -j .data -O ihex main.bin main.hex
+	@$(AVROBJCOPY) -j .text -j .data -O ihex main.bin main.hex
 	@echo Size of sections:
-	@avr-size main.bin	
+	@$(AVRSIZE) main.bin	
 	@echo Size of binary hexfile. Use the "data" size to calculate the bootloader address:
-	@avr-size main.hex
+	@$(AVRSIZE) main.hex
 
 upgrade: main.bin
-	avr-objcopy -O binary main.bin main.raw
-	avr-objcopy -I binary -O elf32-avr \
+	$(AVROBJCOPY) -O binary main.bin main.raw
+	$(AVROBJCOPY) -I binary -O elf32-avr \
         --rename-section .data=.text \
         --redefine-sym _binary_main_raw_start=loader \
         --redefine-sym _binary_main_raw_end=loader_end \
 		main.raw bootloader_linkable.o	
 	
 disasm:	main.bin
-	@avr-objdump -d -S main.bin >main.lss
+	@$(AVROBJDUMP) -d -S main.bin >main.lss
