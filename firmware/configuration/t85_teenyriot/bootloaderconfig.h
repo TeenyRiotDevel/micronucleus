@@ -107,7 +107,7 @@
  * 
  */
 
-#define ENTRYMODE ENTRY_JUMPER
+#define ENTRYMODE ENTRY_ALWAYS
 
 #define JUMPER_PIN    PB4
 #define JUMPER_PORT   PORTB 
